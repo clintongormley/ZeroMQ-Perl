@@ -34,6 +34,7 @@ sub new {
 
     bless {
         _socket => ZeroMQ::Raw::zmq_socket( $ctxt, @args ),
+        _ctxt => $ctxt,
     }, $class;
 }
 
@@ -87,6 +88,13 @@ sub send_as {
     $self->send( $serializer->( $data ) );
 }
 
+sub DESTROY {
+    my $self = shift or return;
+    local $@;
+    eval { $self->close } if $self->{_socket};
+    undef $self;
+}
+
 1;
 
 __END__
@@ -98,7 +106,7 @@ ZeroMQ::Socket - A 0MQ Socket object
 =head1 SYNOPSIS
 
   use ZeroMQ qw/:all/;
-  
+
   my $cxt = ZeroMQ::Context->new;
   my $sock = ZeroMQ::Socket->new($cxt, ZMQ_REP);
 
